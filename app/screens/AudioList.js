@@ -1,20 +1,32 @@
-import { StyleSheet, Text, View } from 'react-native'
-import React, {useEffect} from 'react'
-export * as MediaLibrary from 'expo-media-library'
+import React, { Component } from 'react'
+import { StyleSheet, Text, ScrollView, Dimensions } from 'react-native'
+import { AudioContext } from '../context/AudioProvider'
+import { LayoutProvider, RecyclerListView } from 'recyclerlistview';
 
-export default function AudioList() {
+export default class AudioList extends Component {
     
-    const getPermission = async () =>{
-        const permission = await MediaLibrary.getPermissionAsync()
-        console.log(permission);
-    };
+   static contextType = AudioContext;
 
+   layoutProvider = new LayoutProvider(
+    i => 'audio',
+    (type, dim)=>{
+    dim.width = Dimensions.get('window').width;
+    dim.height = 70;
+   });
 
+   rowRenderer = (type, item)=>{
+    return<Text>{item.filename}</Text>
+   }
+
+  render(){
   return (
-    <View style={styles.container}>
-      <Text>AudioList</Text>
-    </View>
+   <AudioContext.Consumer>
+    {({dataProvider})=>{
+      return <RecyclerListView dataProvider={dataProvider} layoutProvider={this.layoutProvider} rowRenderer={this.rowRenderer}/>
+    }}
+   </AudioContext.Consumer>
   )
+}
 }
 
 const styles = StyleSheet.create({
