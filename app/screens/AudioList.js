@@ -5,6 +5,7 @@ import { LayoutProvider, RecyclerListView } from 'recyclerlistview';
 import AudioListItem from '../components/AudioListItem';
 import Screen from '../components/Screen';
 import OptionModal from '../components/OptionModal';
+import { Audio } from 'expo-av';
 
 export default class AudioList extends Component {
     
@@ -24,8 +25,14 @@ export default class AudioList extends Component {
     dim.height = 70;
    });
 
+   handleAudioPress = (audio)=>{
+    console.log(audio);
+    const playbackobj = new Audio.Sound()
+    playbackobj.loadAsync(({uri:audio.uri},{shouldPlay: true}));
+    console.log('presses audio');
+   };
    rowRenderer = (type, item)=>{
-    return <AudioListItem title={item.title} duration={item.duration} onOptionPress= {
+    return <AudioListItem title={item.title} duration={item.duration} onAudioPress={()=> this.handleAudioPress(item)} onOptionPress= {
       ()=> {
         this.currentItem = item;
         this.setState({...this.state, optionModalVisible: true})

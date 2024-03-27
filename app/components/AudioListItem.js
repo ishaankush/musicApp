@@ -46,12 +46,12 @@ const AudioListItem = ({
   title,
   duration,
   onOptionPress,
-  
+  onAudioPress,
 }) => {
   return (
     <>
       <View style={styles.container}>
-        
+          <TouchableWithoutFeedback onPress={onAudioPress}>
           <View style={styles.leftContainer}>
             <View
               style={[
@@ -71,7 +71,7 @@ const AudioListItem = ({
               <Text style={styles.timeText}>{convertTime(duration)}</Text>
             </View>
           </View>
-        
+          </TouchableWithoutFeedback>
         <View style={styles.rightContainer}>
           <Entypo
             onPress={onOptionPress}
@@ -82,6 +82,7 @@ const AudioListItem = ({
           />
         </View>
       </View>
+      
       <View style={styles.separator} />
     </>
   );
