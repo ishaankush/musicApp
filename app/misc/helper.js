@@ -7,6 +7,7 @@ export const storeAudioForNextOpening = async (audio, index, lastPosition) => {
   );
 };
 
+// function for converting time to minues 
 export const convertTime = minutes => {
   if (minutes) {
     const hrs = minutes / 60;

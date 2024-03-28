@@ -6,7 +6,9 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Audio } from 'expo-av';
 import { storeAudioForNextOpening } from '../misc/helper';
 import { playNext } from '../misc/audioController';
+
 export const AudioContext = createContext();
+
 export class AudioProvider extends Component {
   constructor(props) {
     super(props);
@@ -29,6 +31,7 @@ export class AudioProvider extends Component {
     this.totalAudioCount = 0;
   }
 
+  // if user not accepts storage permisiion
   permissionAllert = () => {
     Alert.alert('Permission Required', 'This app needs to read audio files!', [
       {
@@ -42,6 +45,7 @@ export class AudioProvider extends Component {
     ]);
   };
 
+  //get audio files from local storage of phone
   getAudioFiles = async () => {
     const { dataProvider, audioFiles } = this.state;
     let media = await MediaLibrary.getAssetsAsync({
@@ -51,9 +55,16 @@ export class AudioProvider extends Component {
       mediaType: 'audio',
       first: media.totalCount,
     });
-    
+    // Fetch thumbnails uri
+    media.assets = await Promise.all(media.assets.map(async asset => {
+      
+      const thumbnail = asset?.uri || null; 
+      return {
+        ...asset,
+        thumbnail: thumbnail
+      };
+    }));
     this.totalAudioCount = media.totalCount;
-
     this.setState({
       ...this.state,
       dataProvider: dataProvider.cloneWithRows([
@@ -62,8 +73,16 @@ export class AudioProvider extends Component {
       ]),
       audioFiles: [...audioFiles, ...media.assets],
     });
-  };
 
+    // Accessing thumbnail URIs from media.assets
+    media.assets.forEach(asset => {
+      const thumbnailUri = asset.thumbnail;
+      
+    });
+};
+
+
+  //  to load prev audio
   loadPreviousAudio = async () => {
     let previousAudio = await AsyncStorage.getItem('previousAudio');
     let currentAudio;
@@ -81,16 +100,11 @@ export class AudioProvider extends Component {
     this.setState({ ...this.state, currentAudio, currentAudioIndex });
   };
 
+  // method to get permission 
   getPermission = async () => {
-    // {
-    //     "canAskAgain": true,
-    //     "expires": "never",
-    //     "granted": false,
-    //     "status": "undetermined",
-    //   }
     const permission = await MediaLibrary.getPermissionsAsync();
     if (permission.granted) {
-      //    we want to get all the audio files
+      
       this.getAudioFiles();
     }
 
@@ -102,17 +116,16 @@ export class AudioProvider extends Component {
       const { status, canAskAgain } =
         await MediaLibrary.requestPermissionsAsync();
       if (status === 'denied' && canAskAgain) {
-        //   we are going to display alert that user must allow this permission to work this app
         this.permissionAllert();
       }
 
       if (status === 'granted') {
-        //    we want to get all the audio files
+        
         this.getAudioFiles();
       }
 
       if (status === 'denied' && !canAskAgain) {
-        //   we want to display some error to the user
+        
         this.setState({ ...this.state, permissionError: true });
       }
     }
@@ -159,7 +172,8 @@ export class AudioProvider extends Component {
       }
 
       const nextAudioIndex = this.state.currentAudioIndex + 1;
-      // there is no next audio to play or the current audio is the last
+
+      // handling the last audio
       if (nextAudioIndex >= this.totalAudioCount) {
         this.state.playbackObj.unloadAsync();
         this.updateState(this, {
@@ -172,7 +186,7 @@ export class AudioProvider extends Component {
         });
         return await storeAudioForNextOpening(this.state.audioFiles[0], 0);
       }
-      // otherwise we want to select the next audio
+      // handling non last and first audio
       const audio = this.state.audioFiles[nextAudioIndex];
       const status = await playNext(this.state.playbackObj, audio.uri);
       this.updateState(this, {
@@ -185,6 +199,8 @@ export class AudioProvider extends Component {
     }
   };
 
+
+  
   componentDidMount() {
     this.getPermission();
     if (this.state.playbackObj === null) {

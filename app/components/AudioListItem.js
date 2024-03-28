@@ -11,6 +11,7 @@ import color from '../misc/color';
 
 const getThumbnailText = filename => filename[0];
 
+// method to convert time 
 const convertTime = minutes => {
   if (minutes) {
     const hrs = minutes / 60;
@@ -44,7 +45,7 @@ const renderPlayPauseIcon = isPlaying => {
 
 const AudioListItem = ({
   title,
-  albumId,
+  thumbnailUri,
   duration,
   onOptionPress,
   onAudioPress,

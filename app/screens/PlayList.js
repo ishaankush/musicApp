@@ -81,16 +81,16 @@ const PlayList = ({ navigation }) => {
 
         updatedList = oldList.filter(list => {
           if (list.id === playList.id) {
-            // we want to check is that same audio is already inside our list or not.
+            //  check for duplicate audio in playlist 
             for (let audio of list.audios) {
               if (audio.id === addToPlayList.id) {
-                // alert with some message
+                
                 sameAudio = true;
                 return;
               }
             }
 
-            // otherwise update the playlist.
+            //  update the playlist if not dublicate
             list.audios = [...list.audios, addToPlayList];
           }
 
@@ -111,9 +111,9 @@ const PlayList = ({ navigation }) => {
       return AsyncStorage.setItem('playlist', JSON.stringify([...updatedList]));
     }
 
-    // if there is no audio selected then we want open the list.
+    // open list if no audio selected
     selectedPlayList = playList;
-    // setShowPlayList(true);
+    
     navigation.navigate('PlayListDetail', playList);
   };
 

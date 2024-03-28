@@ -55,7 +55,7 @@ export class AudioList extends Component {
     return (
       <AudioListItem
         title={item.filename}
-        album={item.albumId}
+        thumbnailUri={item.thumbnailUri}
         isPlaying={extendedState.isPlaying}
         activeListItem={this.context.currentAudioIndex === index}
         duration={item.duration}
@@ -77,6 +77,7 @@ export class AudioList extends Component {
 
   render() {
     return (
+      
       <AudioContext.Consumer>
         {({ dataProvider, isPlaying }) => {
           if (!dataProvider._data.length) return null;
