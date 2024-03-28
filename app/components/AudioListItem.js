@@ -37,32 +37,40 @@ const convertTime = minutes => {
 const renderPlayPauseIcon = isPlaying => {
   if (isPlaying)
     return (
-      <Entypo name='controller-paus' size={24} color={color.ACTIVE_FONT} />
+      <Entypo name='controller-paus' size={40} color={color.ACTIVE_FONT} />
     );
-  return <Entypo name='controller-play' size={24} color={color.ACTIVE_FONT} />;
+  return <Entypo name='controller-play' size={40} color={color.ACTIVE_FONT} />;
 };
 
 const AudioListItem = ({
   title,
+  albumId,
   duration,
   onOptionPress,
   onAudioPress,
+  isPlaying,
+  activeListItem,
 }) => {
   return (
     <>
       <View style={styles.container}>
-          <TouchableWithoutFeedback onPress={onAudioPress}>
+        <TouchableWithoutFeedback onPress={onAudioPress}>
           <View style={styles.leftContainer}>
             <View
               style={[
                 styles.thumbnail,
                 {
-                  backgroundColor: 'white'
-                   
+                  backgroundColor: activeListItem
+                    ? color.ACTIVE_BG
+                    : color.FONT_LIGHT,
                 },
               ]}
             >
-             
+              <Text style={styles.thumbnailText}>
+                {activeListItem
+                  ? renderPlayPauseIcon(isPlaying)
+                  : getThumbnailText(title)}
+              </Text>
             </View>
             <View style={styles.titleContainer}>
               <Text numberOfLines={1} style={styles.title}>
@@ -71,7 +79,7 @@ const AudioListItem = ({
               <Text style={styles.timeText}>{convertTime(duration)}</Text>
             </View>
           </View>
-          </TouchableWithoutFeedback>
+        </TouchableWithoutFeedback>
         <View style={styles.rightContainer}>
           <Entypo
             onPress={onOptionPress}
@@ -82,7 +90,6 @@ const AudioListItem = ({
           />
         </View>
       </View>
-      
       <View style={styles.separator} />
     </>
   );

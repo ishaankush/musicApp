@@ -1,64 +1,121 @@
-import React, { Component } from 'react'
-import { StyleSheet, Text, ScrollView, Dimensions } from 'react-native'
-import { AudioContext } from '../context/AudioProvider'
-import { LayoutProvider, RecyclerListView } from 'recyclerlistview';
+import React, { Component } from 'react';
+import { Text, View, StyleSheet, ScrollView, Dimensions } from 'react-native';
+import { AudioContext } from '../context/AudioProvider';
+import { RecyclerListView, LayoutProvider } from 'recyclerlistview';
 import AudioListItem from '../components/AudioListItem';
 import Screen from '../components/Screen';
 import OptionModal from '../components/OptionModal';
 import { Audio } from 'expo-av';
+import {
+  play,
+  pause,
+  resume,
+  playNext,
+  selectAudio,
+} from '../misc/audioController';
+import { storeAudioForNextOpening } from '../misc/helper';
 
-export default class AudioList extends Component {
-    
-   static contextType = AudioContext;
+export class AudioList extends Component {
+  static contextType = AudioContext;
 
-   constructor(props){
+  constructor(props) {
     super(props);
     this.state = {
-      optionModalVisible: false
+      optionModalVisible: false,
     };
-    this.currentItem = {}
-   }
-   layoutProvider = new LayoutProvider(
+
+    this.currentItem = {};
+  }
+
+  layoutProvider = new LayoutProvider(
     i => 'audio',
-    (type, dim)=>{
-    dim.width = Dimensions.get('window').width;
-    dim.height = 70;
-   });
-
-   handleAudioPress = (audio)=>{
-    console.log(audio);
-    const playbackobj = new Audio.Sound()
-    playbackobj.loadAsync(({uri:audio.uri},{shouldPlay: true}));
-    console.log('presses audio');
-   };
-   rowRenderer = (type, item)=>{
-    return <AudioListItem title={item.title} duration={item.duration} onAudioPress={()=> this.handleAudioPress(item)} onOptionPress= {
-      ()=> {
-        this.currentItem = item;
-        this.setState({...this.state, optionModalVisible: true})
+    (type, dim) => {
+      switch (type) {
+        case 'audio':
+          dim.width = Dimensions.get('window').width;
+          dim.height = 70;
+          break;
+        default:
+          dim.width = 0;
+          dim.height = 0;
       }
-    }/>
-   }
+    }
+  );
 
-  render(){
-  return (
-   <AudioContext.Consumer>
-    {({dataProvider})=>{
-      return (
-      <Screen>
-        <RecyclerListView dataProvider={dataProvider} layoutProvider={this.layoutProvider} rowRenderer={this.rowRenderer}/>
-        <OptionModal currentItem={this.currentItem} onClose={()=> this.setState({...this.state, optionModalVisible: false})} visible={this.state.optionModalVisible}/>
-      </Screen>)
-    }}
-   </AudioContext.Consumer>
-  )
-}
+
+  handleAudioPress = async audio => {
+    await selectAudio(audio, this.context);
+  };
+
+  componentDidMount() {
+    this.context.loadPreviousAudio();
+  }
+
+  rowRenderer = (type, item, index, extendedState) => {
+    return (
+      <AudioListItem
+        title={item.filename}
+        album={item.albumId}
+        isPlaying={extendedState.isPlaying}
+        activeListItem={this.context.currentAudioIndex === index}
+        duration={item.duration}
+        onAudioPress={() => this.handleAudioPress(item)}
+        onOptionPress={() => {
+          this.currentItem = item;
+          this.setState({ ...this.state, optionModalVisible: true });
+        }}
+      />
+    );
+  };
+
+  navigateToPlaylist = () => {
+    this.context.updateState(this.context, {
+      addToPlayList: this.currentItem,
+    });
+    this.props.navigation.navigate('PlayList');
+  };
+
+  render() {
+    return (
+      <AudioContext.Consumer>
+        {({ dataProvider, isPlaying }) => {
+          if (!dataProvider._data.length) return null;
+          return (
+            <Screen>
+              <RecyclerListView
+                dataProvider={dataProvider}
+                layoutProvider={this.layoutProvider}
+                rowRenderer={this.rowRenderer}
+                extendedState={{ isPlaying }}
+              />
+              <OptionModal
+              
+                options={[
+                  {
+                    title: 'Add to playlist',
+                    onPress: this.navigateToPlaylist,
+                  },
+                ]}
+                currentItem={this.currentItem}
+                onClose={() =>
+                  this.setState({ ...this.state, optionModalVisible: false })
+                }
+                visible={this.state.optionModalVisible}
+              />
+            </Screen>
+          );
+        }}
+      </AudioContext.Consumer>
+    );
+  }
 }
 
 const styles = StyleSheet.create({
-    container:{
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center'
-    }
-})
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+});
+
+export default AudioList;
